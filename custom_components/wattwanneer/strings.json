@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "WattWanneer",
+        "description": "Vul je API-key in. Nog geen key? Sluit een abonnement af op wattwanneer.nl/api.html.",
+        "data": { "api_key": "API-key" }
+      }
+    },
+    "error": {
+      "invalid_auth": "Deze API-key wordt niet herkend.",
+      "cannot_connect": "Kan WattWanneer niet bereiken.",
+      "rate_limited": "Te veel verzoeken. Probeer het over een minuut opnieuw."
+    },
+    "abort": { "already_configured": "Deze API-key is al toegevoegd." }
+  },
+  "entity": {
+    "sensor": {
+      "current_price": { "name": "Huidige prijs" },
+      "next_hour_price": { "name": "Prijs volgend uur" },
+      "average_today": { "name": "Gemiddelde vandaag" },
+      "lowest_today": { "name": "Laagste vandaag" },
+      "highest_today": { "name": "Hoogste vandaag" },
+      "cheapest_window": { "name": "Goedkoopste venster" },
+      "week_average": { "name": "Gemiddelde deze week" }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "WattWanneer",
+        "description": "Enter your API key. No key yet? Subscribe at wattwanneer.nl/api.html.",
+        "data": { "api_key": "API key" }
+      }
+    },
+    "error": {
+      "invalid_auth": "This API key was not recognised.",
+      "cannot_connect": "Could not reach WattWanneer.",
+      "rate_limited": "Too many requests. Try again in a minute."
+    },
+    "abort": { "already_configured": "This API key has already been added." }
+  },
+  "entity": {
+    "sensor": {
+      "current_price": { "name": "Current price" },
+      "next_hour_price": { "name": "Next hour price" },
+      "average_today": { "name": "Average today" },
+      "lowest_today": { "name": "Lowest today" },
+      "highest_today": { "name": "Highest today" },
+      "cheapest_window": { "name": "Cheapest window" },
+      "week_average": { "name": "Average this week" }
+    }
+  }
+}

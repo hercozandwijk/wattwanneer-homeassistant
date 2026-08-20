@@ -1,0 +1,12 @@
+{
+  "domain": "wattwanneer",
+  "name": "WattWanneer",
+  "codeowners": ["@hercozandwijk"],
+  "config_flow": true,
+  "documentation": "https://wattwanneer.nl/api.html",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/hercozandwijk/wattwanneer-homeassistant/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
