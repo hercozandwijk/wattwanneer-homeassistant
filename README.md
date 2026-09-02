@@ -9,6 +9,11 @@ Zet de Nederlandse stroomprijzen van [WattWanneer](https://wattwanneer.nl) in Ho
 Assistant, inclusief de voorspelling tot zeven dagen vooruit. Waar day-ahead-bronnen
 stoppen bij morgen, kun je hiermee kiezen welke dag van de week het goedkoopst is.
 
+![De stroomprijs voor de komende zeven dagen in Home Assistant](images/grafiek.png)
+
+*De voorspelling voor zeven dagen, getekend met ApexCharts. Het dal op zondag is
+het goedkoopste moment van de week, vier dagen voordat een day-ahead-bron het ziet.*
+
 ## Wat je krijgt
 
 | Sensor | Wat het is |
@@ -18,12 +23,28 @@ stoppen bij morgen, kun je hiermee kiezen welke dag van de week het goedkoopst i
 | Gemiddelde vandaag | Referentie om "goedkoop" tegen af te zetten |
 | Laagste vandaag | Met het uur als attribuut |
 | Hoogste vandaag | Met het uur als attribuut |
-| Goedkoopste venster | Starttijd van het goedkoopste aaneengesloten blok |
-| Gemiddelde deze week | Met de volledige 168-uurs reeks als attribuut |
+| Goedkoopste venster | Starttijd van het goedkoopste aaneengesloten blok in de dagreeks, zie de waarschuwing onder deze tabel |
+| Gemiddelde deze week | Met de volledige 168-uurs reeks plus het goedkoopste uur van de week als attribuut |
 
 De sensoren `Huidige prijs` en `Gemiddelde deze week` hebben de volledige
 prijsreeksen als attributen, zodat je ze direct in ApexCharts of een eigen
 template kunt gebruiken.
+
+![De zeven sensoren van WattWanneer in Home Assistant](images/entiteiten.png)
+
+**Let op bij Goedkoopste venster.** Die sensor komt uit `/v1/summary`, dat rekent
+over de eerste 24 punten van de voorspelling. De reeks begint bij middernacht van
+de dag waarop de voorspelling is gedraaid, en de dagelijkse run is rond 13:30.
+Kijk je daarvoor, dan kan het venster al achter je liggen. In de zomer valt dat
+nauwelijks op omdat de zon het goedkoopste blok naar de middag duwt, maar in
+januari 2026 lag het op 29 van de 31 dagen al voor 12:00. Bouw je er een
+automation op, vang dat geval dan af of gebruik `/v1/charge-plan`, want dat
+endpoint laat uren die al voorbij zijn weg.
+
+De entity-ids zijn Engels, ook als je Home Assistant in het Nederlands draait.
+Home Assistant leidt een entity-id altijd af van de Engelse naam, dus de sensor
+die je in de interface ziet als `Gemiddelde deze week` heet intern
+`sensor.wattwanneer_average_this_week`.
 
 ## Installatie
 
@@ -61,6 +82,103 @@ automation:
           entity_id: switch.vaatwasser
 ```
 
+## De voorspelling in een grafiek
+
+Een gewone ApexCharts-kaart tekent alleen de geschiedenis van een sensor, en een
+voorspelling ligt in de toekomst. Met een `data_generator` lees je de reeks uit
+het attribuut `forecast`, dat alle 168 uren bevat. Je hebt hiervoor
+[apexcharts-card](https://github.com/RomRider/apexcharts-card) nodig, te
+installeren via HACS.
+
+```yaml
+type: custom:apexcharts-card
+header:
+  title: Stroomprijs komende week
+  show: true
+graph_span: 7d
+span:
+  start: hour
+now:
+  show: true
+  label: nu
+series:
+  - entity: sensor.wattwanneer_average_this_week
+    name: Verwachte prijs
+    type: area
+    stroke_width: 2
+    float_precision: 3
+    unit: " €/kWh"
+    data_generator: |
+      return entity.attributes.forecast.map(p => {
+        return [new Date(p.start).getTime(), p.price];
+      });
+```
+
+Zet `graph_span` op `48h` als je alleen vandaag en morgen wilt zien.
+
+Met de standaardkaarten van Home Assistant kom je ook een heel eind, zonder iets
+bij te installeren:
+
+![Een dashboard met de sensoren van WattWanneer](images/dashboard.png)
+
+Dat dashboard krijg je niet vanzelf, want de integratie levert alleen de sensoren.
+Dit is de configuratie erachter, te plakken via de dashboard-editor onder
+"Ruwe configuratie-editor":
+
+```yaml
+- type: markdown
+  content: |-
+    {%- set w = state_attr('sensor.wattwanneer_average_this_week','cheapest_hour') %}
+    {%- set p = state_attr('sensor.wattwanneer_average_this_week','cheapest_price') %}
+    {%- set dagen = ['maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag','zondag'] %}
+    {%- set mnd = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'] %}
+    {%- set d = w | as_datetime | as_local %}
+    {%- set ct = ('%.1f' % (p * 100)) | replace('.', ',') %}
+    ## Goedkoopste moment van de week
+
+    **{{ dagen[d.weekday()] }} {{ d.day }} {{ mnd[d.month-1] }} om {{ '%02d' % d.hour }}:00** voor **{{ ct }} cent** per kWh.
+
+    Dat is {{ (d.date() - now().date()).days }} dagen vooruit.
+- type: markdown
+  content: |-
+    {%- set s = states('sensor.wattwanneer_cheapest_window') | as_datetime | as_local %}
+    {%- set u = state_attr('sensor.wattwanneer_cheapest_window','window_hours') %}
+    {%- set g = state_attr('sensor.wattwanneer_cheapest_window','average_price') %}
+    {%- set ct = ('%.1f' % (g * 100)) | replace('.', ',') %}
+    ## Goedkoopste venster
+
+    Van **{{ '%02d' % s.hour }}:00** tot **{{ '%02d' % ((s.hour + u) % 24) }}:00**, {{ u }} uur aaneengesloten voor gemiddeld **{{ ct }} cent** per kWh.
+
+    Bruikbaar voor de vaatwasser, de wasmachine of het laden van je auto.
+- type: entities
+  title: Vandaag
+  entities:
+    - entity: sensor.wattwanneer_current_price
+      name: Nu
+    - entity: sensor.wattwanneer_next_hour_price
+      name: Volgend uur
+    - entity: sensor.wattwanneer_average_today
+      name: Gemiddeld
+    - entity: sensor.wattwanneer_lowest_today
+      name: Laagste
+    - entity: sensor.wattwanneer_highest_today
+      name: Hoogste
+- type: entities
+  title: Vooruit kijken
+  entities:
+    - entity: sensor.wattwanneer_cheapest_window
+      name: Goedkoopste venster
+    - entity: sensor.wattwanneer_average_this_week
+      name: Gemiddelde deze week
+```
+
+De twee markdown-kaarten rekenen de prijs om naar centen en schrijven de datum
+voluit. De kaart linksboven leest het goedkoopste uur uit de hele week, de kaart
+ernaast pakt het goedkoopste aaneengesloten blok uit de dagreeks. Dat verschil is
+precies waar de twee sensoren voor bedoeld zijn.
+
+Met dank aan Sven Hagenaars voor de eerste versie van deze grafiekconfiguratie.
+
 ## Problemen melden
 
 Open een issue in deze repository. Vermeld je Home Assistant-versie en het
@@ -77,7 +195,7 @@ De integratie gebruikt twee bronnen:
   waardoor het huidige uur er niet meer in zit. Zonder die tweede bron zou de
   sensor "Huidige prijs" 's middags leeglopen.
 
-Alle tijdstempels uit de API zijn UTC; `today_prices.json` gebruikt lokale
+Alle tijdstempels uit de API zijn UTC. Het bestand `today_prices.json` gebruikt lokale
 Nederlandse tijd. De coordinator rekent dat om via de tijdzonedatabase, dus ook
 rond de overgang naar zomer- en wintertijd klopt het.
 
@@ -113,7 +231,7 @@ voordat een gebruiker er tegenaan loopt.
 
 ## Status
 
-Getest op Home Assistant 2026.8.2: installatie via de configuratiedialoog
+Getest op Home Assistant 2026.8.3: installatie via de configuratiedialoog
 (geldige key, ongeldige key, dezelfde key twee keer), alle zeven sensoren met
 live data, en een volledige herstart waarna alles terugkomt. Zestien unit tests
 dekken daarnaast de foutafhandeling, waaronder een onbereikbare API.
