@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -76,4 +76,23 @@ class WattWanneerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 continue
             if dag.date().toordinal() == doel:
                 uit.append({"start": row["local"], "price": row["price"]})
+        return uit
+
+    def raw_for_day(self, offset_days: int = 0) -> list[dict[str, Any]]:
+        """Uurprijzen van vandaag (0) of morgen (1) in het formaat van Nordpool.
+
+        Elk uur als ``start``, ``end`` en ``value``. Start en einde zijn
+        datetime-objecten met tijdzone, zoals bij de Nordpool-integratie, want
+        pakketten rekenen ermee in hun templates (``item.start.isoformat()``,
+        ``selectattr('start', '>=', now())``). Het einde is het volgende uur op
+        de klok. Bij de wintertijd dekt het herhaalde uur 02:00 zo twee echte
+        uren, want WattWanneer middelt die twee al tot een prijs.
+        """
+        tz = ZoneInfo(LOCAL_TZ)
+        uit = []
+        for row in self.prices_for_day(offset_days):
+            klok = datetime.strptime(row["start"], "%Y-%m-%d %H:00")
+            start = klok.replace(tzinfo=tz)
+            eind = (klok + timedelta(hours=1)).replace(tzinfo=tz)
+            uit.append({"start": start, "end": eind, "value": row["price"]})
         return uit

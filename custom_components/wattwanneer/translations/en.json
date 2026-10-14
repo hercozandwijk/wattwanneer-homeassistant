@@ -22,7 +22,8 @@
       "lowest_today": { "name": "Lowest today" },
       "highest_today": { "name": "Highest today" },
       "cheapest_window": { "name": "Cheapest window" },
-      "week_average": { "name": "Average this week" }
+      "week_average": { "name": "Average this week" },
+      "nordpool_format": { "name": "Prices (Nordpool format)" }
     }
   }
 }

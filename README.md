@@ -25,6 +25,7 @@ het goedkoopste moment van de week, vier dagen voordat een day-ahead-bron het zi
 | Hoogste vandaag | Met het uur als attribuut |
 | Goedkoopste venster | Starttijd van het goedkoopste aaneengesloten blok in de dagreeks, zie de waarschuwing onder deze tabel |
 | Gemiddelde deze week | Met de volledige 168-uurs reeks plus het goedkoopste uur van de week als attribuut |
+| Prijzen (Nordpool-formaat) | Huidige prijs met `raw_today`, `raw_tomorrow` en `tomorrow_valid` zoals de Nordpool-integratie, voor pakketten die een Nordpool-sensor vragen |
 
 De sensoren `Huidige prijs` en `Gemiddelde deze week` hebben de volledige
 prijsreeksen als attributen, zodat je ze direct in ApexCharts of een eigen
@@ -61,6 +62,27 @@ Nog geen API-key? Je sluit een abonnement af op
 Eén keer per uur. De voorspelling zelf ververst één keer per dag, in de middag,
 dus vaker ophalen levert dezelfde data op. De API staat 10 verzoeken per minuut
 toe, dus je zit hier ruim onder.
+
+## Als Nordpool-sensor, bijvoorbeeld voor een Zendure-batterij
+
+Veel pakketten voor Home Assistant lezen hun prijzen uit een sensor van de
+Nordpool-integratie. De sensor `sensor.wattwanneer_prices_nordpool_format` heeft
+dezelfde attributen, dus je vult daar WattWanneer in:
+
+- `raw_today` en `raw_tomorrow`: per uur `start`, `end` en `value`, met
+  datetime-objecten met tijdzone, net als bij Nordpool
+- `today` en `tomorrow`: alleen de prijzen, als lijst
+- `tomorrow_valid`: `true` zodra de day-ahead-prijzen voor morgen er zijn,
+  meestal rond 13:00. Daarvoor is `raw_tomorrow` leeg.
+- `current_price`, `average`, `min`, `max`, `currency` en `unit`
+
+Een voorbeeld is het lokale
+[Zendure-pakket van Gielz1986](https://github.com/Gielz1986/Zendure-HA-zenSDK). Vul
+bij **Dynamisch Nordpool Sensor** `sensor.wattwanneer_prices_nordpool_format` in.
+
+De prijzen zijn de kale beursprijs in euro per kWh, zonder energiebelasting,
+opslag en btw. De rest van de week staat in het attribuut `forecast` van
+`Gemiddelde deze week`.
 
 ## Voorbeeld: vaatwasser op het goedkoopste blok
 
@@ -233,8 +255,10 @@ voordat een gebruiker er tegenaan loopt.
 
 Getest op Home Assistant 2026.8.3: installatie via de configuratiedialoog
 (geldige key, ongeldige key, dezelfde key twee keer), alle zeven sensoren met
-live data, en een volledige herstart waarna alles terugkomt. Zestien unit tests
-dekken daarnaast de foutafhandeling, waaronder een onbereikbare API.
+live data, en een volledige herstart waarna alles terugkomt. Eenentwintig unit tests
+dekken daarnaast de foutafhandeling, waaronder een onbereikbare API. De sensor in
+Nordpool-formaat (versie 0.2.0) is getest op Home Assistant 2026.10.1, ook met de
+template-bewerkingen die het Zendure-pakket doet en rond de wintertijd.
 
 Nog te doen voor opname in de standaard HACS-lijst: een pull request naar
 [home-assistant/brands](https://github.com/home-assistant/brands) en naar

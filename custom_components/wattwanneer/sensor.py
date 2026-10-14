@@ -32,6 +32,7 @@ async def async_setup_entry(
             HighestTodaySensor(coordinator, entry),
             CheapestWindowSensor(coordinator, entry),
             WeekAverageSensor(coordinator, entry),
+            NordpoolFormatSensor(coordinator, entry),
         ]
     )
 
@@ -244,4 +245,55 @@ class WeekAverageSensor(PriceSensor):
                 }
                 for p in punten
             ],
+        }
+
+
+class NordpoolFormatSensor(PriceSensor):
+    """Huidige prijs met de attributen van de Nordpool-integratie.
+
+    Veel pakketten voor Home Assistant, zoals het lokale Zendure-pakket van
+    Gielz1986, lezen hun prijzen uit een sensor met ``raw_today`` en
+    ``raw_tomorrow``. Met deze sensor vul je daar WattWanneer in. Morgen is
+    alleen gevuld als de day-ahead-prijzen gepubliceerd zijn, net als bij
+    Nordpool, en ``tomorrow_valid`` zegt of dat zo is. Prijzen zijn de kale
+    beursprijs in euro per kWh.
+    """
+
+    _attr_translation_key = "nordpool_format"
+    _attr_icon = "mdi:format-list-numbered"
+    # De lijsten staan al in de bron; zonder dit groeit de database elk uur.
+    _unrecorded_attributes = frozenset({"today", "tomorrow", "raw_today", "raw_tomorrow"})
+
+    def __init__(self, coordinator, entry) -> None:
+        super().__init__(coordinator, entry)
+        self._attr_unique_id = f"{entry.entry_id}_nordpool_format"
+
+    @property
+    def native_value(self) -> float | None:
+        return self.coordinator.price_at(self._now)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        vandaag = self.coordinator.raw_for_day(0)
+        morgen = self.coordinator.raw_for_day(1)
+        # Een dag met minder dan 23 uur is niet compleet (23 is de zomertijddag).
+        morgen_geldig = len(morgen) >= 23
+        if not morgen_geldig:
+            morgen = []
+        waarden = [u["value"] for u in vandaag]
+        return {
+            "current_price": self.native_value,
+            "average": round(sum(waarden) / len(waarden), 5) if waarden else None,
+            "min": min(waarden, default=None),
+            "max": max(waarden, default=None),
+            "unit": "kWh",
+            "currency": "EUR",
+            "country": "Netherlands",
+            "region": "NL",
+            "price_in_cents": False,
+            "today": waarden,
+            "tomorrow": [u["value"] for u in morgen],
+            "tomorrow_valid": morgen_geldig,
+            "raw_today": vandaag,
+            "raw_tomorrow": morgen,
         }

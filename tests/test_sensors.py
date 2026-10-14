@@ -24,7 +24,7 @@ async def test_alle_sensoren_verschijnen(
 ):
     await _setup(hass, aioclient_mock, forecast_payload, summary_payload, today_payload)
     ids = [e for e in hass.states.async_entity_ids("sensor") if "wattwanneer" in e]
-    assert len(ids) == 7
+    assert len(ids) == 8
 
 
 async def test_goedkoopste_venster_leest_summary(

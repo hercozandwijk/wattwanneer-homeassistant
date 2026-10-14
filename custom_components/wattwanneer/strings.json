@@ -22,7 +22,8 @@
       "lowest_today": { "name": "Laagste vandaag" },
       "highest_today": { "name": "Hoogste vandaag" },
       "cheapest_window": { "name": "Goedkoopste venster" },
-      "week_average": { "name": "Gemiddelde deze week" }
+      "week_average": { "name": "Gemiddelde deze week" },
+      "nordpool_format": { "name": "Prijzen (Nordpool-formaat)" }
     }
   }
 }
