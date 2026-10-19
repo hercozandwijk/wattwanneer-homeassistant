@@ -5,6 +5,11 @@
         "title": "WattWanneer",
         "description": "Enter your API key. No key yet? Subscribe at wattwanneer.nl/api.html.",
         "data": { "api_key": "API key" }
+      },
+      "reauth_confirm": {
+        "title": "New API key",
+        "description": "WattWanneer rejects the stored API key, for example because the subscription expired or was renewed. Enter your new key.",
+        "data": { "api_key": "API key" }
       }
     },
     "error": {
@@ -12,7 +17,7 @@
       "cannot_connect": "Could not reach WattWanneer.",
       "rate_limited": "Too many requests. Try again in a minute."
     },
-    "abort": { "already_configured": "This API key has already been added." }
+    "abort": { "already_configured": "This API key has already been added.", "reauth_successful": "The new API key has been saved." }
   },
   "entity": {
     "sensor": {

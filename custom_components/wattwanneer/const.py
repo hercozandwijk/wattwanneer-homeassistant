@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from zoneinfo import ZoneInfo
 
 DOMAIN = "wattwanneer"
 
@@ -21,6 +22,10 @@ UPDATE_INTERVAL = timedelta(hours=1)
 
 # Tijdzone waarin WattWanneer zijn lokale datums uitdrukt.
 LOCAL_TZ = "Europe/Amsterdam"
+# Een keer aangemaakt bij het importeren. ZoneInfo leest de tijdzonedata van
+# schijf, en dat is blokkerende I/O die niet in de event loop hoort, terwijl
+# price_at en _now_local bij elke update van elke sensor draaien.
+LOCAL_ZONE = ZoneInfo(LOCAL_TZ)
 
 ATTR_PRICES_TODAY = "prices_today"
 ATTR_PRICES_TOMORROW = "prices_tomorrow"

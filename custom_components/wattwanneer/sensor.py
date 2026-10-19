@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from typing import Any
-from zoneinfo import ZoneInfo
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -13,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOCAL_TZ
+from .const import DOMAIN, LOCAL_ZONE
 from .coordinator import WattWanneerCoordinator
 
 EUR_KWH = "EUR/kWh"
@@ -200,7 +199,7 @@ class CheapestWindowSensor(WattWanneerSensor):
             "average_price": venster.get("avg_price"),
             "local_start": (
                 datetime.fromisoformat(venster["start"].replace("Z", "+00:00"))
-                .astimezone(ZoneInfo(LOCAL_TZ))
+                .astimezone(LOCAL_ZONE)
                 .strftime("%Y-%m-%d %H:%M")
                 if venster.get("start")
                 else None
@@ -234,7 +233,7 @@ class WeekAverageSensor(PriceSensor):
         return {
             "hours": len(punten),
             "cheapest_hour": goedkoopste["timestamp"].astimezone(
-                ZoneInfo(LOCAL_TZ)
+                LOCAL_ZONE
             ).strftime("%Y-%m-%d %H:%M"),
             "cheapest_price": goedkoopste["price"],
             "forecast": [

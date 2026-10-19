@@ -5,13 +5,14 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
-from zoneinfo import ZoneInfo
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import InvalidAuth, RateLimited, WattWanneerClient, WattWanneerError
-from .const import DOMAIN, LOCAL_TZ, UPDATE_INTERVAL
+from .const import DOMAIN, LOCAL_ZONE, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,10 +20,13 @@ _LOGGER = logging.getLogger(__name__)
 class WattWanneerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Eén ophaalronde per uur, gedeeld door alle sensoren."""
 
-    def __init__(self, hass: HomeAssistant, client: WattWanneerClient) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, client: WattWanneerClient
+    ) -> None:
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=UPDATE_INTERVAL,
         )
@@ -32,9 +36,11 @@ class WattWanneerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.client.async_fetch()
         except InvalidAuth as err:
-            # Laat HA de herauthenticatie-flow starten in plaats van blijven
-            # proberen met een key die toch geweigerd wordt.
-            raise UpdateFailed(f"API-key geweigerd: {err}") from err
+            # ConfigEntryAuthFailed laat HA de herauthenticatie starten: de
+            # gebruiker krijgt een melding om een nieuwe key in te vullen, in
+            # plaats van dat we elk uur blijven proberen met een geweigerde key.
+            # Bij de eerste refresh in async_setup_entry geldt hetzelfde.
+            raise ConfigEntryAuthFailed(f"API-key geweigerd: {err}") from err
         except RateLimited as err:
             raise UpdateFailed(f"Rate limit bereikt: {err}") from err
         except WattWanneerError as err:
@@ -43,7 +49,7 @@ class WattWanneerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     # ---- afgeleide waarden die meerdere sensoren gebruiken ----
 
     def _now_local(self) -> datetime:
-        return datetime.now(timezone.utc).astimezone(ZoneInfo(LOCAL_TZ))
+        return datetime.now(timezone.utc).astimezone(LOCAL_ZONE)
 
     def price_at(self, moment: datetime) -> float | None:
         """Prijs van het uur waarin ``moment`` valt.
@@ -53,7 +59,7 @@ class WattWanneerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         if not self.data:
             return None
-        lokaal = moment.astimezone(ZoneInfo(LOCAL_TZ)).strftime("%Y-%m-%d %H:00")
+        lokaal = moment.astimezone(LOCAL_ZONE).strftime("%Y-%m-%d %H:00")
         for row in self.data.get("today", []):
             if row["local"] == lokaal:
                 return row["price"]
@@ -88,11 +94,10 @@ class WattWanneerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         de klok. Bij de wintertijd dekt het herhaalde uur 02:00 zo twee echte
         uren, want WattWanneer middelt die twee al tot een prijs.
         """
-        tz = ZoneInfo(LOCAL_TZ)
         uit = []
         for row in self.prices_for_day(offset_days):
             klok = datetime.strptime(row["start"], "%Y-%m-%d %H:00")
-            start = klok.replace(tzinfo=tz)
-            eind = (klok + timedelta(hours=1)).replace(tzinfo=tz)
+            start = klok.replace(tzinfo=LOCAL_ZONE)
+            eind = (klok + timedelta(hours=1)).replace(tzinfo=LOCAL_ZONE)
             uit.append({"start": start, "end": eind, "value": row["price"]})
         return uit

@@ -57,6 +57,10 @@ die je in de interface ziet als `Gemiddelde deze week` heet intern
 Nog geen API-key? Je sluit een abonnement af op
 [wattwanneer.nl/api.html](https://wattwanneer.nl/api.html).
 
+Wordt je key later geweigerd, bijvoorbeeld omdat je abonnement is verlopen of
+opnieuw is afgesloten, dan vraagt Home Assistant zelf om een nieuwe key. Je
+sensoren en hun historie blijven gewoon bestaan.
+
 ## Hoe vaak wordt er opgehaald
 
 Eén keer per uur. De voorspelling zelf ververst één keer per dag, in de middag,
@@ -258,7 +262,9 @@ Getest op Home Assistant 2026.8.3: installatie via de configuratiedialoog
 live data, en een volledige herstart waarna alles terugkomt. Eenentwintig unit tests
 dekken daarnaast de foutafhandeling, waaronder een onbereikbare API. De sensor in
 Nordpool-formaat (versie 0.2.0) is getest op Home Assistant 2026.10.1, ook met de
-template-bewerkingen die het Zendure-pakket doet en rond de wintertijd.
+template-bewerkingen die het Zendure-pakket doet en rond de wintertijd. Versie 0.2.1
+voegt de vraag om een nieuwe key toe bij een geweigerde key, en maakt de tijdzone een
+keer aan in plaats van bij elke update (zesentwintig unit tests, Home Assistant 2026.10.2).
 
 Nog te doen voor opname in de standaard HACS-lijst: een pull request naar
 [home-assistant/brands](https://github.com/home-assistant/brands) en naar
