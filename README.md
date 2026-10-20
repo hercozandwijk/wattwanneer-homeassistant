@@ -3,7 +3,7 @@
 # WattWanneer voor Home Assistant
 
 [![Validatie](https://github.com/hercozandwijk/wattwanneer-homeassistant/actions/workflows/validate.yml/badge.svg)](https://github.com/hercozandwijk/wattwanneer-homeassistant/actions/workflows/validate.yml)
-[![hacs](https://img.shields.io/badge/HACS-custom-41BDF5.svg)](https://hacs.xyz)
+[![hacs](https://img.shields.io/badge/HACS-default-41BDF5.svg)](https://hacs.xyz)
 
 Zet de Nederlandse stroomprijzen van [WattWanneer](https://wattwanneer.nl) in Home
 Assistant, inclusief de voorspelling tot zeven dagen vooruit. Waar day-ahead-bronnen
@@ -49,7 +49,8 @@ die je in de interface ziet als `Gemiddelde deze week` heet intern
 
 ## Installatie
 
-1. Voeg deze repository in HACS toe als custom repository (categorie: Integration).
+1. Open HACS en zoek op WattWanneer (de integratie staat in de standaardlijst), of open hem direct:
+   [![Openen in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=hercozandwijk&repository=wattwanneer-homeassistant&category=integration)
 2. Installeer WattWanneer en herstart Home Assistant.
 3. Ga naar Instellingen, Apparaten en diensten, Integratie toevoegen, en zoek WattWanneer.
 4. Vul je API-key in.
@@ -266,17 +267,8 @@ template-bewerkingen die het Zendure-pakket doet en rond de wintertijd. Versie 0
 voegt de vraag om een nieuwe key toe bij een geweigerde key, en maakt de tijdzone een
 keer aan in plaats van bij elke update (zesentwintig unit tests, Home Assistant 2026.10.2).
 
-Nog te doen voor opname in de standaard HACS-lijst: een pull request naar
-[home-assistant/brands](https://github.com/home-assistant/brands) en naar
-[hacs/default](https://github.com/hacs/default). Tot die tijd werkt de
-integratie prima als custom repository.
-
-## Voor de HACS-aanvraag
-
-De map `brands/` bevat `icon.png` (256x256) en `icon@2x.png` (512x512), klaar
-voor de pull request naar [home-assistant/brands](https://github.com/home-assistant/brands).
-Die is pas nodig bij opname in de standaard HACS-lijst, niet om de integratie
-als custom repository te gebruiken.
+Sinds 20 oktober 2026 staat de integratie in de standaardlijst van HACS
+([hacs/default#10150](https://github.com/hacs/default/pull/10150)).
 
 ## Licentie
 
