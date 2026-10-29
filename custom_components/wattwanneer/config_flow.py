@@ -8,11 +8,26 @@ from typing import Any
 import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .api import InvalidAuth, RateLimited, WattWanneerClient, WattWanneerError
-from .const import CONF_API_KEY, DOMAIN
+from .const import CONF_API_KEY, CONF_ZONE, DOMAIN, ZONE_NL, ZONES
 
 SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+SCHEMA_USER = SCHEMA.extend(
+    {
+        vol.Required(CONF_ZONE, default=ZONE_NL): SelectSelector(
+            SelectSelectorConfig(
+                options=ZONES, translation_key=CONF_ZONE, mode=SelectSelectorMode.LIST
+            )
+        )
+    }
+)
+TITELS = {"NL": "WattWanneer", "BE": "WattWanneer België"}
 
 
 class WattWanneerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -20,9 +35,9 @@ class WattWanneerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _controleer(self, key: str) -> str | None:
+    async def _controleer(self, key: str, zone: str = ZONE_NL) -> str | None:
         """Geeft de foutcode terug, of None als de key werkt."""
-        client = WattWanneerClient(async_get_clientsession(self.hass), key)
+        client = WattWanneerClient(async_get_clientsession(self.hass), key, zone)
         try:
             await client.async_validate()
         except InvalidAuth:
@@ -40,19 +55,22 @@ class WattWanneerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             key = user_input[CONF_API_KEY].strip()
-            # Eén installatie per key; voorkomt dubbele sensoren.
-            await self.async_set_unique_id(key[-8:])
+            zone = user_input.get(CONF_ZONE, ZONE_NL)
+            # Eén installatie per key en land; voorkomt dubbele sensoren. Voor
+            # Nederland is dit dezelfde unique_id als voor 0.3.0.
+            uid = key[-8:] if zone == ZONE_NL else f"{key[-8:]}_{zone.lower()}"
+            await self.async_set_unique_id(uid)
             self._abort_if_unique_id_configured()
 
-            if fout := await self._controleer(key):
+            if fout := await self._controleer(key, zone):
                 errors["base"] = fout
             else:
                 return self.async_create_entry(
-                    title="WattWanneer", data={CONF_API_KEY: key}
+                    title=TITELS[zone], data={CONF_API_KEY: key, CONF_ZONE: zone}
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=SCHEMA, errors=errors
+            step_id="user", data_schema=SCHEMA_USER, errors=errors
         )
 
     async def async_step_reauth(
@@ -69,7 +87,8 @@ class WattWanneerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             key = user_input[CONF_API_KEY].strip()
-            if fout := await self._controleer(key):
+            zone = self._get_reauth_entry().data.get(CONF_ZONE, ZONE_NL)
+            if fout := await self._controleer(key, zone):
                 errors["base"] = fout
             else:
                 # De unique_id blijft gelijk: het is dezelfde installatie met

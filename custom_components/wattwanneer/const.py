@@ -8,6 +8,14 @@ from zoneinfo import ZoneInfo
 DOMAIN = "wattwanneer"
 
 CONF_API_KEY = "api_key"
+CONF_ZONE = "zone"
+
+# Biedzone. Sinds 0.3.0 ook België: de API neemt dan de Nederlandse
+# voorspelling en legt daar de echte Belgische day-ahead prijzen overheen.
+# Een installatie zonder zone (van voor 0.3.0) is Nederland.
+ZONE_NL = "NL"
+ZONE_BE = "BE"
+ZONES = [ZONE_NL, ZONE_BE]
 
 # De betaalde API levert de 168-uurs voorspelling.
 API_BASE = "https://wattwanneer.nl/api/v1"
@@ -15,12 +23,15 @@ API_BASE = "https://wattwanneer.nl/api/v1"
 # nodig: zodra de dagelijkse run in de middag klaar is, begint /v1/forecast bij
 # morgen 00:00 en zit het huidige uur er dus niet meer in.
 TODAY_URL = "https://wattwanneer.nl/public/today_prices.json"
+# Hetzelfde voor België, in hetzelfde formaat en dezelfde lokale tijd.
+TODAY_URL_BE = "https://wattwanneer.nl/public/today_prices_be.json"
 
 # De voorspelling ververst een keer per dag, in de middag. Een keer per uur
 # ophalen is ruim voldoende en blijft ver onder de rate limit van 10 per minuut.
 UPDATE_INTERVAL = timedelta(hours=1)
 
-# Tijdzone waarin WattWanneer zijn lokale datums uitdrukt.
+# Tijdzone waarin WattWanneer zijn lokale datums uitdrukt. Brussel heeft
+# dezelfde klok, dus dit geldt ook voor de Belgische prijzen.
 LOCAL_TZ = "Europe/Amsterdam"
 # Een keer aangemaakt bij het importeren. ZoneInfo leest de tijdzonedata van
 # schijf, en dat is blokkerende I/O die niet in de event loop hoort, terwijl

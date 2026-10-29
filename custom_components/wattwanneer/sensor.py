@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOCAL_ZONE
+from .const import CONF_ZONE, DOMAIN, LOCAL_ZONE, ZONE_NL
 from .coordinator import WattWanneerCoordinator
 
 EUR_KWH = "EUR/kWh"
@@ -44,9 +44,13 @@ class WattWanneerSensor(CoordinatorEntity[WattWanneerCoordinator], SensorEntity)
     def __init__(self, coordinator: WattWanneerCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
         self._entry = entry
+        # Nederland heet zoals voor 0.3.0, zodat entity-ids gelijk blijven. België
+        # krijgt een eigen naam, en dus sensor.wattwanneer_belgie_..., zodat je
+        # beide naast elkaar kunt hebben.
+        belgie = entry.data.get(CONF_ZONE, ZONE_NL) != ZONE_NL
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name="WattWanneer",
+            name="WattWanneer België" if belgie else "WattWanneer",
             manufacturer="WattWanneer",
             model="Stroomprijsvoorspelling",
             entry_type=DeviceEntryType.SERVICE,

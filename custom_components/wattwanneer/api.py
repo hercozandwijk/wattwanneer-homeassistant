@@ -8,7 +8,7 @@ from typing import Any
 
 import aiohttp
 
-from .const import API_BASE, TODAY_URL
+from .const import API_BASE, TODAY_URL, TODAY_URL_BE, ZONE_NL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,14 +36,27 @@ class WattWanneerClient:
     """Haalt prijzen op bij WattWanneer.
 
     Gebruikt twee bronnen: de betaalde API voor de weekvoorspelling en het
-    publieke today_prices.json voor vandaag. Dat laatste is nodig omdat de
+    publieke today_prices.json voor vandaag (today_prices_be.json voor België). Dat laatste is nodig omdat de
     forecast na de dagelijkse run bij morgen 00:00 begint, waardoor het huidige
     uur er niet meer in zit.
     """
 
-    def __init__(self, session: aiohttp.ClientSession, api_key: str) -> None:
+    def __init__(
+        self, session: aiohttp.ClientSession, api_key: str, zone: str = ZONE_NL
+    ) -> None:
         self._session = session
         self._api_key = api_key
+        self._zone = zone
+
+    def _met_zone(self, url: str) -> str:
+        """Nederland vraagt precies wat het voor 0.3.0 vroeg, dus zonder zone."""
+        if self._zone == ZONE_NL:
+            return url
+        return f"{url}{'&' if '?' in url else '?'}zone={self._zone}"
+
+    @property
+    def _today_url(self) -> str:
+        return TODAY_URL if self._zone == ZONE_NL else TODAY_URL_BE
 
     @property
     def _headers(self) -> dict[str, str]:
@@ -65,13 +78,13 @@ class WattWanneerClient:
 
     async def async_validate(self) -> None:
         """Controleert of de key werkt. Gebruikt in de config flow."""
-        await self._get(f"{API_BASE}/summary")
+        await self._get(self._met_zone(f"{API_BASE}/summary"))
 
     async def async_fetch(self) -> dict[str, Any]:
         """Haalt alles op wat de sensoren nodig hebben."""
-        forecast = await self._get(f"{API_BASE}/forecast?hours=168")
-        summary = await self._get(f"{API_BASE}/summary")
-        today_raw = await self._get(TODAY_URL, authenticated=False)
+        forecast = await self._get(self._met_zone(f"{API_BASE}/forecast?hours=168"))
+        summary = await self._get(self._met_zone(f"{API_BASE}/summary"))
+        today_raw = await self._get(self._today_url, authenticated=False)
 
         points = [
             {
@@ -83,7 +96,7 @@ class WattWanneerClient:
             if p.get("timestamp") is not None
         ]
 
-        # today_prices.json gebruikt lokale NL-tijd zonder tijdzone-aanduiding.
+        # today_prices.json gebruikt lokale tijd zonder tijdzone-aanduiding.
         today: list[dict[str, Any]] = []
         for row in today_raw or []:
             stamp = row.get("datetime")

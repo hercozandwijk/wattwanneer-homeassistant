@@ -3,8 +3,9 @@
     "step": {
       "user": {
         "title": "WattWanneer",
-        "description": "Vul je API-key in. Nog geen key? Sluit een abonnement af op wattwanneer.nl/api.html.",
-        "data": { "api_key": "API-key" }
+        "description": "Vul je API-key in en kies je land. Nog geen key? Sluit een abonnement af op wattwanneer.nl/api.html.",
+        "data": { "api_key": "API-key", "zone": "Land" },
+        "data_description": { "zone": "België gebruikt de echte Belgische day-ahead prijzen en voor de dagen daarna de voorspelling van WattWanneer." }
       },
       "reauth_confirm": {
         "title": "Nieuwe API-key",
@@ -17,7 +18,10 @@
       "cannot_connect": "Kan WattWanneer niet bereiken.",
       "rate_limited": "Te veel verzoeken. Probeer het over een minuut opnieuw."
     },
-    "abort": { "already_configured": "Deze API-key is al toegevoegd.", "reauth_successful": "De nieuwe API-key is opgeslagen." }
+    "abort": { "already_configured": "Deze API-key is voor dit land al toegevoegd.", "reauth_successful": "De nieuwe API-key is opgeslagen." }
+  },
+  "selector": {
+    "zone": { "options": { "NL": "Nederland", "BE": "België" } }
   },
   "entity": {
     "sensor": {

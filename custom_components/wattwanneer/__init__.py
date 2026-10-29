@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import WattWanneerClient
-from .const import CONF_API_KEY, DOMAIN
+from .const import CONF_API_KEY, CONF_ZONE, DOMAIN, ZONE_NL
 from .coordinator import WattWanneerCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -16,7 +16,11 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Zet de integratie op na configuratie via de UI."""
-    client = WattWanneerClient(async_get_clientsession(hass), entry.data[CONF_API_KEY])
+    client = WattWanneerClient(
+        async_get_clientsession(hass),
+        entry.data[CONF_API_KEY],
+        entry.data.get(CONF_ZONE, ZONE_NL),
+    )
     coordinator = WattWanneerCoordinator(hass, entry, client)
     # Een geweigerde key geeft hier ConfigEntryAuthFailed (zie de coordinator),
     # en dan start HA de herauthenticatie in plaats van het opnieuw te proberen.

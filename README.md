@@ -5,7 +5,7 @@
 [![Validatie](https://github.com/hercozandwijk/wattwanneer-homeassistant/actions/workflows/validate.yml/badge.svg)](https://github.com/hercozandwijk/wattwanneer-homeassistant/actions/workflows/validate.yml)
 [![hacs](https://img.shields.io/badge/HACS-default-41BDF5.svg)](https://hacs.xyz)
 
-Zet de Nederlandse stroomprijzen van [WattWanneer](https://wattwanneer.nl) in Home
+Zet de Nederlandse of Belgische stroomprijzen van [WattWanneer](https://wattwanneer.nl) in Home
 Assistant, inclusief de voorspelling tot zeven dagen vooruit. Waar day-ahead-bronnen
 stoppen bij morgen, kun je hiermee kiezen welke dag van de week het goedkoopst is.
 
@@ -53,7 +53,7 @@ die je in de interface ziet als `Gemiddelde deze week` heet intern
    [![Openen in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=hercozandwijk&repository=wattwanneer-homeassistant&category=integration)
 2. Installeer WattWanneer en herstart Home Assistant.
 3. Ga naar Instellingen, Apparaten en diensten, Integratie toevoegen, en zoek WattWanneer.
-4. Vul je API-key in.
+4. Vul je API-key in en kies Nederland of België.
 
 Nog geen API-key? Je sluit een abonnement af op
 [wattwanneer.nl/api.html](https://wattwanneer.nl/api.html).
@@ -61,6 +61,25 @@ Nog geen API-key? Je sluit een abonnement af op
 Wordt je key later geweigerd, bijvoorbeeld omdat je abonnement is verlopen of
 opnieuw is afgesloten, dan vraagt Home Assistant zelf om een nieuwe key. Je
 sensoren en hun historie blijven gewoon bestaan.
+
+## België
+
+Sinds versie 0.3.0 kun je bij het instellen België kiezen. Er is geen apart
+Belgisch model, want de Belgische prijs volgt de Nederlandse op de voet. Over het
+afgelopen jaar lag hij per uur gemiddeld 0,7 cent naast de Nederlandse, en viel
+het goedkoopste blok van drie uur op 72% van de dagen op hetzelfde moment. Wat je
+krijgt:
+
+- voor vandaag en morgen de echte Belgische day-ahead prijzen
+- voor de dagen daarna de voorspelling van WattWanneer
+
+De entity-ids beginnen dan met `sensor.wattwanneer_belgie_`, bijvoorbeeld
+`sensor.wattwanneer_belgie_prices_nordpool_format`. Met dezelfde key kun je
+Nederland en België naast elkaar installeren.
+
+Het zijn kale beursprijzen, zonder btw, nettarief of capaciteitstarief. Wil je
+die erbij, reken ze dan op in een template of gebruik `/v1/tariff` met
+`charges` en `vat`.
 
 ## Hoe vaak wordt er opgehaald
 
@@ -222,8 +241,12 @@ De integratie gebruikt twee bronnen:
   waardoor het huidige uur er niet meer in zit. Zonder die tweede bron zou de
   sensor "Huidige prijs" 's middags leeglopen.
 
-Alle tijdstempels uit de API zijn UTC. Het bestand `today_prices.json` gebruikt lokale
-Nederlandse tijd. De coordinator rekent dat om via de tijdzonedatabase, dus ook
+Kies je België, dan vraagt de integratie dezelfde endpoints met `?zone=BE` en
+leest hij `today_prices_be.json`. Een installatie van voor 0.3.0 heeft geen land
+in de configuratie en blijft Nederland, met precies dezelfde verzoeken als eerst.
+
+Alle tijdstempels uit de API zijn UTC. De bestanden `today_prices.json` en
+`today_prices_be.json` gebruiken lokale tijd, die in Nederland en België gelijk is. De coordinator rekent dat om via de tijdzonedatabase, dus ook
 rond de overgang naar zomer- en wintertijd klopt het.
 
 De prijssensoren hebben bewust geen `state_class`. Home Assistant staat
@@ -266,6 +289,7 @@ Nordpool-formaat (versie 0.2.0) is getest op Home Assistant 2026.10.1, ook met d
 template-bewerkingen die het Zendure-pakket doet en rond de wintertijd. Versie 0.2.1
 voegt de vraag om een nieuwe key toe bij een geweigerde key, en maakt de tijdzone een
 keer aan in plaats van bij elke update (zesentwintig unit tests, Home Assistant 2026.10.2).
+Versie 0.3.0 voegt België toe (vierendertig unit tests, Home Assistant 2026.10.4).
 
 Sinds 20 oktober 2026 staat de integratie in de standaardlijst van HACS
 ([hacs/default#10150](https://github.com/hacs/default/pull/10150)).
