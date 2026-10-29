@@ -289,7 +289,8 @@ Nordpool-formaat (versie 0.2.0) is getest op Home Assistant 2026.10.1, ook met d
 template-bewerkingen die het Zendure-pakket doet en rond de wintertijd. Versie 0.2.1
 voegt de vraag om een nieuwe key toe bij een geweigerde key, en maakt de tijdzone een
 keer aan in plaats van bij elke update (zesentwintig unit tests, Home Assistant 2026.10.2).
-Versie 0.3.0 voegt België toe (vierendertig unit tests, Home Assistant 2026.10.4).
+Versie 0.3.0 voegt België toe, 0.3.1 zet de vertaalsleutels van die keuze in kleine
+letters zoals hassfest eist (vijfendertig unit tests, Home Assistant 2026.10.4).
 
 Sinds 20 oktober 2026 staat de integratie in de standaardlijst van HACS
 ([hacs/default#10150](https://github.com/hacs/default/pull/10150)).

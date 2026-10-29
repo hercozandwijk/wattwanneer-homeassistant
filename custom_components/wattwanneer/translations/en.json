@@ -21,7 +21,7 @@
     "abort": { "already_configured": "This API key has already been added for this country.", "reauth_successful": "The new API key has been saved." }
   },
   "selector": {
-    "zone": { "options": { "NL": "Netherlands", "BE": "Belgium" } }
+    "zone": { "options": { "nl": "Netherlands", "be": "Belgium" } }
   },
   "entity": {
     "sensor": {

@@ -18,11 +18,15 @@ from .api import InvalidAuth, RateLimited, WattWanneerClient, WattWanneerError
 from .const import CONF_API_KEY, CONF_ZONE, DOMAIN, ZONE_NL, ZONES
 
 SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+# Hassfest eist kleine letters in vertaalsleutels, dus de keuzelijst gebruikt
+# nl en be. Opgeslagen wordt NL of BE, zoals de API het verwacht.
 SCHEMA_USER = SCHEMA.extend(
     {
-        vol.Required(CONF_ZONE, default=ZONE_NL): SelectSelector(
+        vol.Required(CONF_ZONE, default=ZONE_NL.lower()): SelectSelector(
             SelectSelectorConfig(
-                options=ZONES, translation_key=CONF_ZONE, mode=SelectSelectorMode.LIST
+                options=[z.lower() for z in ZONES],
+                translation_key=CONF_ZONE,
+                mode=SelectSelectorMode.LIST,
             )
         )
     }
@@ -55,7 +59,7 @@ class WattWanneerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             key = user_input[CONF_API_KEY].strip()
-            zone = user_input.get(CONF_ZONE, ZONE_NL)
+            zone = user_input.get(CONF_ZONE, ZONE_NL).upper()
             # Eén installatie per key en land; voorkomt dubbele sensoren. Voor
             # Nederland is dit dezelfde unique_id als voor 0.3.0.
             uid = key[-8:] if zone == ZONE_NL else f"{key[-8:]}_{zone.lower()}"

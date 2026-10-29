@@ -7,6 +7,10 @@ zone in de config) moet precies blijven doen wat hij deed.
 
 from __future__ import annotations
 
+import json
+import re
+from pathlib import Path
+
 from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
@@ -16,6 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.wattwanneer.api import WattWanneerClient
+from custom_components.wattwanneer.config_flow import SCHEMA_USER
 from custom_components.wattwanneer.const import API_BASE, DOMAIN, TODAY_URL, TODAY_URL_BE
 
 KEY = "ww_zonetestkey1234567890abcdef"
@@ -61,7 +66,7 @@ async def test_dialoog_belgie_maakt_een_belgische_entry(
 ):
     aioclient_mock.get(f"{API_BASE}/summary?zone=BE", json=summary_payload)
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"api_key": KEY, "zone": "BE"})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {"api_key": KEY, "zone": "be"})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "WattWanneer België"
     assert result["data"] == {"api_key": KEY, "zone": "BE"}
@@ -79,7 +84,7 @@ async def test_dialoog_zonder_keuze_is_nederland(hass: HomeAssistant, aioclient_
 
 async def test_zelfde_key_voor_beide_landen_mag(hass: HomeAssistant, aioclient_mock, summary_payload):
     aioclient_mock.get(f"{API_BASE}/summary", json=summary_payload)
-    for zone in ("NL", "BE", "BE"):
+    for zone in ("nl", "be", "be"):
         result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {"api_key": KEY, "zone": zone})
     assert result["type"] is FlowResultType.ABORT
@@ -132,3 +137,13 @@ async def test_nieuwe_key_houdt_het_land(
     await hass.async_block_till_done()
     assert result["reason"] == "reauth_successful"
     assert entry.data == {"api_key": KEY, "zone": "BE"}
+
+
+def test_keuzes_zijn_geldige_vertaalsleutels():
+    """Hassfest weigert hoofdletters in vertaalsleutels (v0.3.0 viel daarop in CI)."""
+    keuzes = next(v for k, v in SCHEMA_USER.schema.items() if k == "zone").config["options"]
+    for naam in ("strings.json", "translations/nl.json", "translations/en.json"):
+        pad = Path(__file__).resolve().parent.parent / "custom_components/wattwanneer" / naam
+        opties = json.loads(pad.read_text())["selector"]["zone"]["options"]
+        assert sorted(opties) == sorted(keuzes), naam
+        assert all(re.fullmatch(r"[a-z0-9]([a-z0-9_-]*[a-z0-9])?", k) for k in opties), naam
