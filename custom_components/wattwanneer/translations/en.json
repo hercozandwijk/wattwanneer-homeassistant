@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "WattWanneer",
-        "description": "Enter your API key and choose your country. No key yet? Subscribe at wattwanneer.nl/api.html.",
+        "description": "Enter your API key and choose your country. No key yet? The first month is free, then € 4.99 per month. Subscribe at wattwanneer.nl/api.html.",
         "data": { "api_key": "API key", "zone": "Country" },
         "data_description": { "zone": "Belgium uses the actual Belgian day-ahead prices, and the WattWanneer forecast for the days after." }
       },

@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "WattWanneer",
-        "description": "Vul je API-key in en kies je land. Nog geen key? Sluit een abonnement af op wattwanneer.nl/api.html.",
+        "description": "Vul je API-key in en kies je land. Nog geen key? De eerste maand is gratis, daarna € 4,99 per maand. Afsluiten doe je op wattwanneer.nl/api.html.",
         "data": { "api_key": "API-key", "zone": "Land" },
         "data_description": { "zone": "België gebruikt de echte Belgische day-ahead prijzen en voor de dagen daarna de voorspelling van WattWanneer." }
       },

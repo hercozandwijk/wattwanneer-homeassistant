@@ -55,8 +55,8 @@ die je in de interface ziet als `Gemiddelde deze week` heet intern
 3. Ga naar Instellingen, Apparaten en diensten, Integratie toevoegen, en zoek WattWanneer.
 4. Vul je API-key in en kies Nederland of België.
 
-Nog geen API-key? Je sluit een abonnement af op
-[wattwanneer.nl/api.html](https://wattwanneer.nl/api.html).
+Nog geen API-key? De eerste maand is gratis, daarna € 4,99 per maand. Je sluit
+het abonnement af op [wattwanneer.nl/api.html](https://wattwanneer.nl/api.html).
 
 Wordt je key later geweigerd, bijvoorbeeld omdat je abonnement is verlopen of
 opnieuw is afgesloten, dan vraagt Home Assistant zelf om een nieuwe key. Je
@@ -291,6 +291,7 @@ voegt de vraag om een nieuwe key toe bij een geweigerde key, en maakt de tijdzon
 keer aan in plaats van bij elke update (zesentwintig unit tests, Home Assistant 2026.10.2).
 Versie 0.3.0 voegt België toe, 0.3.1 zet de vertaalsleutels van die keuze in kleine
 letters zoals hassfest eist (vijfendertig unit tests, Home Assistant 2026.10.4).
+Versie 0.3.2 noemt in het installatiescherm dat de eerste maand gratis is.
 
 Sinds 20 oktober 2026 staat de integratie in de standaardlijst van HACS
 ([hacs/default#10150](https://github.com/hacs/default/pull/10150)).
